@@ -2,10 +2,15 @@ use std::collections::HashMap;
 
 use rmp_serde as rmps;
 
-use serde::Serialize;
 use rmps::Serializer;
+use serde::Serialize;
 
-use super::code::{CODE_NEW_EVALUATOR, CODE_NEW_EVALUATOR_RESPONSE, CODE_CLOSE_EVALUATOR, CODE_EVALUATE, CODE_EVALUATE_RESPONSE, CODE_EVALUATE_READ_RESPONSE, CODE_EVALUATE_READ_MODULE_RESPONSE, CODE_LIST_RESOURCES_RESPONSE, CODE_LIST_MODULES_REQUEST, CODE_LIST_MODULES_RESPONSE};
+use super::code::{
+    CODE_CLOSE_EVALUATOR, CODE_EVALUATE, CODE_EVALUATE_READ_MODULE_RESPONSE,
+    CODE_EVALUATE_READ_RESPONSE, CODE_EVALUATE_RESPONSE,
+    CODE_LIST_MODULES_RESPONSE, CODE_LIST_RESOURCES_RESPONSE, CODE_NEW_EVALUATOR,
+    CODE_NEW_EVALUATOR_RESPONSE,
+};
 
 /// Packs a message in messagepasing v5 format
 ///
@@ -15,13 +20,17 @@ pub fn pack_message(msg: OutgoingMessage) -> Result<Vec<u8>, &'static str> {
     let code = get_code(&msg).0;
     let value = (code, &msg);
 
-    let _ = &value.serialize(&mut Serializer::new(&mut buf).with_struct_map().with_binary()).unwrap();
+    let _ = &value
+        .serialize(&mut Serializer::new(&mut buf).with_struct_map().with_binary())
+        .unwrap();
     return Ok(buf);
 }
 
 fn get_code(t: &OutgoingMessage) -> (u8, Option<u8>) {
     match t {
-        OutgoingMessage::CreateEvaluator(..) => (CODE_NEW_EVALUATOR, Some(CODE_NEW_EVALUATOR_RESPONSE)),
+        OutgoingMessage::CreateEvaluator(..) => {
+            (CODE_NEW_EVALUATOR, Some(CODE_NEW_EVALUATOR_RESPONSE))
+        }
         OutgoingMessage::CloseEvaluator(..) => (CODE_CLOSE_EVALUATOR, None),
         OutgoingMessage::Evaluate(..) => (CODE_EVALUATE, Some(CODE_EVALUATE_RESPONSE)),
         OutgoingMessage::ReadResourceResponse(..) => (CODE_EVALUATE_READ_RESPONSE, None),
@@ -44,7 +53,8 @@ pub enum OutgoingMessage {
 impl Serialize for OutgoingMessage {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer {
+        S: serde::Serializer,
+    {
         match self {
             OutgoingMessage::CreateEvaluator(v) => v.serialize(serializer),
             OutgoingMessage::CloseEvaluator(v) => v.serialize(serializer),
@@ -213,11 +223,26 @@ mod tests {
     ///   }
     /// ]
     fn test_pack_message_specification_1() {
-        let pe = PathElement{name: "foo.pkl".into(), is_directory: false};
-        let mr = ListModulesResponse{request_id: -647892, evaluator_id: -13901, path_elements: vec![pe].into(), error: None};
+        let pe = PathElement {
+            name: "foo.pkl".into(),
+            is_directory: false,
+        };
+        let mr = ListModulesResponse {
+            request_id: -647892,
+            evaluator_id: -13901,
+            path_elements: vec![pe].into(),
+            error: None,
+        };
 
         let mp = pack_message(OutgoingMessage::ListModulesResponse(mr)).unwrap();
-        let expected = vec![0x92, 0x2D, 0x83, 0xA9, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0xD2, 0xFF, 0xF6, 0x1D, 0x2C, 0xAB, 0x65, 0x76, 0x61, 0x6C, 0x75, 0x61, 0x74, 0x6F, 0x72, 0x49, 0x64, 0xD1, 0xC9, 0xB3, 0xAC, 0x70, 0x61, 0x74, 0x68, 0x45, 0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x73, 0x91, 0x82, 0xA4, 0x6E, 0x61, 0x6D, 0x65, 0xA7, 0x66, 0x6F, 0x6F, 0x2E, 0x70, 0x6B, 0x6C, 0xAB, 0x69, 0x73, 0x44, 0x69, 0x72, 0x65, 0x63, 0x74, 0x6F, 0x72, 0x79, 0xC2];
+        let expected = vec![
+            0x92, 0x2D, 0x83, 0xA9, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0xD2,
+            0xFF, 0xF6, 0x1D, 0x2C, 0xAB, 0x65, 0x76, 0x61, 0x6C, 0x75, 0x61, 0x74, 0x6F, 0x72,
+            0x49, 0x64, 0xD1, 0xC9, 0xB3, 0xAC, 0x70, 0x61, 0x74, 0x68, 0x45, 0x6C, 0x65, 0x6D,
+            0x65, 0x6E, 0x74, 0x73, 0x91, 0x82, 0xA4, 0x6E, 0x61, 0x6D, 0x65, 0xA7, 0x66, 0x6F,
+            0x6F, 0x2E, 0x70, 0x6B, 0x6C, 0xAB, 0x69, 0x73, 0x44, 0x69, 0x72, 0x65, 0x63, 0x74,
+            0x6F, 0x72, 0x79, 0xC2,
+        ];
 
         println!("Serialized: {:X?}", mp);
 

@@ -1,0 +1,83 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'pkl-bind'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=pkl-bind"
+                ],
+                "filter": {
+                    "name": "pkl-bind",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'pkl-gen'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=pkl-gen",
+                    "--package=pkl-gen"
+                ],
+                "filter": {
+                    "name": "pkl-gen",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'pkl-gen'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=pkl-gen",
+                    "--package=pkl-gen"
+                ],
+                "filter": {
+                    "name": "pkl-gen",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'empty'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=empty",
+                    "--package=pkl_bind_test_suite"
+                ],
+                "filter": {
+                    "name": "empty",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

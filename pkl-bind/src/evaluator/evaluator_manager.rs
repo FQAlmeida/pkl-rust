@@ -1,13 +1,19 @@
-
 use std::path::PathBuf;
-
-use serde::Deserialize;
 
 use crate::evaluator::decoder::Pkl;
 
-use super::{evaluator::Evaluator, evaluator_options::EvaluatorOptions, msg_api::{incoming::IncomingMessage, outgoing::{OutgoingMessage, CreateEvaluator, CloseEvaluator, Evaluate, ListModulesResponse, PathElement}}};
 use super::executor::Executor;
-
+use super::{
+    evaluator::Evaluator,
+    evaluator_options::EvaluatorOptions,
+    msg_api::{
+        incoming::IncomingMessage,
+        outgoing::{
+            CloseEvaluator, CreateEvaluator, Evaluate, ListModulesResponse, OutgoingMessage,
+            PathElement,
+        },
+    },
+};
 
 #[derive(Default)]
 pub struct EvaluatorManager {
@@ -20,15 +26,18 @@ pub struct EvaluatorManager {
 }
 
 impl EvaluatorManager {
-    fn close() -> Result<&'static str, &'static str> {
+    fn _close() -> Result<&'static str, &'static str> {
         todo!()
     }
 
-    fn get_version() -> Result<String, &'static str> {
+    fn _get_version() -> Result<String, &'static str> {
         todo!()
     }
 
-     fn new_evaluator(&mut self, options: Option<EvaluatorOptions>) -> Result<i64, &'static str> {
+    pub fn new_evaluator(
+        &mut self,
+        options: Option<EvaluatorOptions>,
+    ) -> Result<i64, &'static str> {
         let opts = match options {
             None => Default::default(),
             Some(x) => x,
@@ -50,7 +59,11 @@ impl EvaluatorManager {
             timeout_seconds: None,
         };
 
-        let eval_resp = match self.exec.senrec(OutgoingMessage::CreateEvaluator(message_data)).expect("Failed to send message") {
+        let eval_resp = match self
+            .exec
+            .senrec(OutgoingMessage::CreateEvaluator(message_data))
+            .expect("Failed to send message")
+        {
             IncomingMessage::CreateEvaluatorResponse(x) => x,
             _ => panic!("Unexpected response"),
         };
@@ -73,11 +86,14 @@ impl EvaluatorManager {
         return Ok(res);
     }
 
-    fn new_project_evaluator() -> Result<Evaluator, &'static str> {
+    pub fn new_project_evaluator() -> Result<Evaluator, &'static str> {
         todo!()
     }
 
-    fn evaluate_module<T>(&mut self, file: String, id_number: i64) -> Result<T, &'static str> where T: Pkl + std::fmt::Debug {
+    pub fn evaluate_module<T>(&mut self, file: String, id_number: i64) -> Result<T, &'static str>
+    where
+        T: Pkl + std::fmt::Debug,
+    {
         // send the evaluate request
         let eval_req = Evaluate {
             request_id: rand::random::<i64>(),
@@ -88,7 +104,10 @@ impl EvaluatorManager {
         };
 
         let eval_msg = OutgoingMessage::Evaluate(eval_req);
-        let mut resp = self.exec.senrec(eval_msg).expect("Failed to receive message");
+        let mut resp = self
+            .exec
+            .senrec(eval_msg)
+            .expect("Failed to receive message");
 
         loop {
             match &mut resp {
@@ -113,10 +132,10 @@ impl EvaluatorManager {
                     let res = T::unmarshal(data);
                     println!("Res: {:?}", res);
                     return res;
-                },
-                IncomingMessage::ReadResource(x) => todo!(),
-                IncomingMessage::ReadModule(x) => todo!(),
-                IncomingMessage::ListResources(x) => todo!(),
+                }
+                IncomingMessage::ReadResource(_x) => todo!(),
+                IncomingMessage::ReadModule(_x) => todo!(),
+                IncomingMessage::ListResources(_x) => todo!(),
                 IncomingMessage::ListModules(x) => {
                     // get all the files in the module:
                     let path = PathBuf::from(file.clone());
@@ -125,21 +144,23 @@ impl EvaluatorManager {
                         // files = std::fs::read_dir(path); // TODO
                     }
 
-                    let mut modules: Vec<PathElement> = vec![];
+                    let modules: Vec<PathElement> = vec![];
                     // for file in files {
                     //     // TODO make module
                     // }
 
-                    let list_resp = ListModulesResponse{
+                    let list_resp = ListModulesResponse {
                         request_id: x.request_id,
                         evaluator_id: id_number.clone(),
                         path_elements: Some(modules),
                         error: None,
                     };
 
-                    let resp = self.exec.senrec(OutgoingMessage::ListModulesResponse(list_resp)).expect("Failed to send/receive data");
-
-                },
+                    let _resp = self
+                        .exec
+                        .senrec(OutgoingMessage::ListModulesResponse(list_resp))
+                        .expect("Failed to send/receive data");
+                }
                 IncomingMessage::Log(_) => todo!(),
                 _ => return Err("Client received unexpected response from server"),
             }
@@ -168,9 +189,10 @@ impl Drop for EvaluatorManager {
 
 #[cfg(test)]
 mod tests {
-    use pkl_derive::Pkl;
+    use std::path::Path;
+
     use crate::evaluator::decoder::Pkl;
-    use serde::Deserialize;
+    use pkl_derive::Pkl;
 
     use super::*;
 
@@ -178,7 +200,9 @@ mod tests {
     fn test_new_evaluator() {
         let mut eval = EvaluatorManager::default();
 
-        let _evaluator = eval.new_evaluator(None).expect("Failed to create a new evaluator");
+        let _evaluator = eval
+            .new_evaluator(None)
+            .expect("Failed to create a new evaluator");
     }
 
     #[test]
@@ -186,15 +210,21 @@ mod tests {
         // Fails since we need our own macro to deserialize this
         #[derive(Debug, Pkl)]
         struct Test {
-            foo: i64,
             bar: i32,
+            foo: i64,
         }
 
         let mut eval = EvaluatorManager::default();
 
-        let evaluator = eval.new_evaluator(None).expect("Failed to create a new evaluator");
+        let evaluator = eval
+            .new_evaluator(None)
+            .expect("Failed to create a new evaluator");
 
-        let test: Test = eval.evaluate_module::<Test>("file:///home/stormblessed/Code/pkl-rust/pkl-bind/src/evaluator/tests/test.pkl".into(), evaluator).expect("Failed to obtain result");
+        let test_fp = Path::new("./src/evaluator/tests/test.pkl").canonicalize().expect("Failed to get path");
+        println!("{:#?}", &test_fp.to_str().expect("Failed to get path"));
+        let test: Test = eval
+            .evaluate_module::<Test>(format!("file:///{}", test_fp.to_string_lossy()), evaluator)
+            .expect("Failed to obtain result");
 
         assert_eq!(test.foo, 1);
         assert_eq!(test.bar, 2);

@@ -25,49 +25,49 @@ pub enum IncomingMessage {
 }
 
 impl IncomingMessage {
-    fn create_evaluator_response(&self) -> Option<CreateEvaluatorResponse> {
+    pub fn create_evaluator_response(&self) -> Option<CreateEvaluatorResponse> {
         if let IncomingMessage::CreateEvaluatorResponse(msg) = self {
             Some(msg.clone())
         } else {
             None
         }
     }
-    fn evaluate_response(&self) -> Option<EvaluateResponse> {
+    pub fn evaluate_response(&self) -> Option<EvaluateResponse> {
         if let IncomingMessage::EvaluateResponse(msg) = self {
             Some(msg.clone())
         } else {
             None
         }
     }
-    fn read_resource(&self) -> Option<ReadResource> {
+    pub fn read_resource(&self) -> Option<ReadResource> {
         if let IncomingMessage::ReadResource(msg) = self {
             Some(msg.clone())
         } else {
             None
         }
     }
-    fn read_module(&self) -> Option<ReadModule> {
+    pub fn read_module(&self) -> Option<ReadModule> {
         if let IncomingMessage::ReadModule(msg) = self {
             Some(msg.clone())
         } else {
             None
         }
     }
-    fn list_resources(&self) -> Option<ListResources> {
+    pub fn list_resources(&self) -> Option<ListResources> {
         if let IncomingMessage::ListResources(msg) = self {
             Some(msg.clone())
         } else {
             None
         }
     }
-    fn list_modules(&self) -> Option<ListModules> {
+    pub fn list_modules(&self) -> Option<ListModules> {
         if let IncomingMessage::ListModules(msg) = self {
             Some(msg.clone())
         } else {
             None
         }
     }
-    fn log(&self) -> Option<Log> {
+    pub fn log(&self) -> Option<Log> {
         if let IncomingMessage::Log(msg) = self {
             Some(msg.clone())
         } else {

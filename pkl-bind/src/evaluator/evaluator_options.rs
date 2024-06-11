@@ -1,8 +1,11 @@
-use std::{collections::HashMap, path::PathBuf};
 use dirs::home_dir;
 use std::env;
+use std::{collections::HashMap, path::PathBuf};
 
-use super::{msg_api::outgoing::{ResourceReader, ModuleReader}, logger::Logger};
+use super::{
+    logger::Logger,
+    msg_api::outgoing::{ModuleReader, ResourceReader},
+};
 
 //TODO documentation
 //TODO this should be taken from a pkl file in the future
@@ -19,7 +22,7 @@ pub struct EvaluatorOptions {
     pub cache_dir: PathBuf,
     pub root_dir: String, //TODO this should also be a path
     pub project_dir: String, //TODO this should be a path
-    pub declared_project_dependency: ProjectDependencies
+                          // declared_project_dependency: ProjectDependencies
 }
 
 macro_rules! vec_of_strings {
@@ -28,20 +31,40 @@ macro_rules! vec_of_strings {
 
 impl Default for EvaluatorOptions {
     fn default() -> Self {
-        let allowed_resources: Vec<String> = vec_of_strings!["http:", "https:", "file:",
-                                                     "env:", "prop:", "modulepath:",
-                                                     "package:", "projectpackage:", "customfs:"];
-        let allowed_modules: Vec<String> = vec_of_strings!["pkl:", "repl:", "file:", "http:",
-                                                   "https:", "modulepath:", "package:",
-                                                   "projectpackage:"];
+        let allowed_resources: Vec<String> = vec_of_strings![
+            "http:",
+            "https:",
+            "file:",
+            "env:",
+            "prop:",
+            "modulepath:",
+            "package:",
+            "projectpackage:",
+            "customfs:"
+        ];
+        let allowed_modules: Vec<String> = vec_of_strings![
+            "pkl:",
+            "repl:",
+            "file:",
+            "http:",
+            "https:",
+            "modulepath:",
+            "package:",
+            "projectpackage:"
+        ];
         let mut dirname = home_dir().expect("No home directory found!");
         dirname.push("/.pkl/cache");
 
         let mut os_env: HashMap<String, String> = Default::default();
 
         for (key, value) in env::vars_os() {
-            os_env.insert(key.to_str().expect("Failed to obtain key").into(),
-                            value.to_str().expect("Failed to obtain value for key").into());
+            os_env.insert(
+                key.to_str().expect("Failed to obtain key").into(),
+                value
+                    .to_str()
+                    .expect("Failed to obtain value for key")
+                    .into(),
+            );
         }
 
         Self {
@@ -57,28 +80,28 @@ impl Default for EvaluatorOptions {
             cache_dir: dirname,
             root_dir: Default::default(),
             project_dir: Default::default(),
-            declared_project_dependency: Default::default(),
+            // declared_project_dependency: Default::default(),
         }
     }
 }
 
 #[derive(Default)]
-struct ProjectRemoteDependency {
-    package_uri: String, // TODO this should be a path
-    checksums: String, //TODO should this be unified with the msg_api::Checksums type?
+pub struct ProjectRemoteDependency {
+    pub package_uri: String, // TODO this should be a path
+    pub checksums: String,   //TODO should this be unified with the msg_api::Checksums type?
 }
 
 #[derive(Default)]
-struct ProjectLocalDependency {
-    package_uri: String,
-    project_file_uri: String,
-    dependencies: ProjectDependencies
+pub struct ProjectLocalDependency {
+    pub package_uri: String,
+    pub project_file_uri: String,
+    pub dependencies: ProjectDependencies,
 }
 
 #[derive(Default)]
-struct ProjectDependencies {
-    local_dependencies: HashMap<String, ProjectLocalDependency>,
-    remote_dependencies: HashMap<String, ProjectRemoteDependency>,
+pub struct ProjectDependencies {
+    pub local_dependencies: HashMap<String, ProjectLocalDependency>,
+    pub remote_dependencies: HashMap<String, ProjectRemoteDependency>,
 }
 
 #[cfg(test)]

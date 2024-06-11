@@ -1,11 +1,24 @@
-use std::{sync::mpsc::{Sender, Receiver, channel}, any::Any, collections::HashMap, rc::Rc};
+use std::{
+    any::Any,
+    collections::HashMap,
+    sync::mpsc::{channel, Sender},
+};
 
 use crate::evaluator::msg_api::incoming::IncomingMessage;
 
-use super::{msg_api::{outgoing::{ResourceReader, ModuleReader, Evaluate}, incoming::EvaluateResponse}, module_source::ModuleSource, logger::Logger, evaluator_options::EvaluatorOptions, evaluator_manager::EvaluatorManager};
+use super::{
+    evaluator_options::EvaluatorOptions,
+    logger::Logger,
+    module_source::ModuleSource,
+    msg_api::{
+        incoming::EvaluateResponse,
+        outgoing::{Evaluate, ModuleReader, ResourceReader},
+    },
+};
 
 // Interface for evaluating pkl modules
-pub struct Evaluator { // NOTE the lifetime allows us to ignore close() since at the end of the lifetime the Evaluator is killed automatically
+pub struct Evaluator {
+    // NOTE the lifetime allows us to ignore close() since at the end of the lifetime the Evaluator is killed automatically
     pub evaluator_id: i64,
     pub logger: Logger,
     // pub manager: Option<Rc<&EvaluatorManager>>, //TODO fix the bidirectional reference
@@ -26,7 +39,7 @@ impl Default for Evaluator {
             closed: Default::default(),
             resource_readers: Default::default(),
             module_readers: Default::default(),
-            opts: Default::default()
+            opts: Default::default(),
         }
     }
 }
@@ -34,14 +47,27 @@ impl Default for Evaluator {
 // TODO the `out` field should be replaced with some sort of
 //  macro since we can evaluate what the type is at compile
 //  time. //NOTE I'm dumb and wrong...
-pub trait EvaluatorMethods { // NOTE this allows for other types of evaluators, which could be nice
+pub trait EvaluatorMethods {
+    // NOTE this allows for other types of evaluators, which could be nice
     fn evaluate_module<T>(&self, source: &ModuleSource) -> Result<T, &'static str>;
     fn evaluate_output_text(&self, source: &ModuleSource) -> Result<&'static str, &'static str>;
-    fn evaluate_output_value(&self, source: &ModuleSource, out: &dyn Any) -> Result<&'static str, &'static str>;
+    fn evaluate_output_value(
+        &self,
+        source: &ModuleSource,
+        out: &dyn Any,
+    ) -> Result<&'static str, &'static str>;
     fn evaluate_output_files(&self, source: &ModuleSource) -> Result<&'static str, &'static str>;
-    fn evaluate_expression<T>(&self, source: &ModuleSource, expr: Option<String>) -> Result<T, &'static str>;
-    fn evaluate_expression_raw<T>(&self, source: &ModuleSource, expr: Option<String>) -> Result<T, &'static str>;
-    fn closed(&self, ) -> bool;
+    fn evaluate_expression<T>(
+        &self,
+        source: &ModuleSource,
+        expr: Option<String>,
+    ) -> Result<T, &'static str>;
+    fn evaluate_expression_raw<T>(
+        &self,
+        source: &ModuleSource,
+        expr: Option<String>,
+    ) -> Result<T, &'static str>;
+    fn closed(&self) -> bool;
     fn close(&self);
 }
 
@@ -50,15 +76,23 @@ impl EvaluatorMethods for Evaluator {
         return self.evaluate_expression(source, None);
     }
 
-    fn evaluate_expression<T>(&self, source: &ModuleSource, expr: Option<String>) -> Result<T, &'static str> {
+    fn evaluate_expression<T>(
+        &self,
+        source: &ModuleSource,
+        expr: Option<String>,
+    ) -> Result<T, &'static str> {
         return self.evaluate_expression_raw(source, expr);
     }
 
-    fn evaluate_expression_raw<T>(&self, source: &ModuleSource, expr: Option<String>) -> Result<T, &'static str> {
+    fn evaluate_expression_raw<T>(
+        &self,
+        source: &ModuleSource,
+        expr: Option<String>,
+    ) -> Result<T, &'static str> {
         let request_id: i64 = rand::random::<i64>();
-        let (send, recv) = channel::<IncomingMessage>();
+        let (_send, _recv) = channel::<IncomingMessage>();
 
-        let msg = Evaluate {
+        let _msg = Evaluate {
             request_id,
             evaluator_id: self.evaluator_id,
             module_uri: source.uri().to_string(),
@@ -68,19 +102,23 @@ impl EvaluatorMethods for Evaluator {
         todo!()
     }
 
-    fn evaluate_output_text(&self, source: &ModuleSource) -> Result<&'static str, &'static str> {
+    fn evaluate_output_text(&self, _source: &ModuleSource) -> Result<&'static str, &'static str> {
         todo!()
     }
 
-    fn evaluate_output_value(&self, source: &ModuleSource, out: &dyn Any) -> Result<&'static str, &'static str> {
+    fn evaluate_output_value(
+        &self,
+        _source: &ModuleSource,
+        _out: &dyn Any,
+    ) -> Result<&'static str, &'static str> {
         todo!()
     }
 
-    fn evaluate_output_files(&self, source: &ModuleSource) -> Result<&'static str, &'static str> {
+    fn evaluate_output_files(&self, _source: &ModuleSource) -> Result<&'static str, &'static str> {
         todo!()
     }
 
-    fn closed(&self, ) -> bool {
+    fn closed(&self) -> bool {
         todo!()
     }
 
